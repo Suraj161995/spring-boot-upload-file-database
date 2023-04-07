@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.bezkoder.spring.files.upload.db.service.FileStorageService;
 import com.bezkoder.spring.files.upload.db.message.ResponseFile;
-import com.bezkoder.spring.files.upload.db.message.ResponseMessage;
 import com.bezkoder.spring.files.upload.db.model.FileDB;
+import com.bezkoder.spring.files.upload.db.model.StorageServiceResponse;
+import com.bezkoder.spring.files.upload.db.service.FileStorageService;
 
 @Controller
 @CrossOrigin("http://localhost:8081")
@@ -29,16 +30,16 @@ public class FileController {
   private FileStorageService storageService;
 
   @PostMapping("/upload")
-  public ResponseEntity<ResponseMessage> uploadFile(@RequestParam("file") MultipartFile file) {
+  public ResponseEntity<StorageServiceResponse> uploadFile(@RequestParam("file") MultipartFile file) {
     String message = "";
     try {
-      storageService.store(file);
-
-      message = "Uploaded the file successfully: " + file.getOriginalFilename();
-      return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
+    	ResponseEntity<StorageServiceResponse> responseEntity = storageService.store(file);
+      return responseEntity;
     } catch (Exception e) {
       message = "Could not upload the file: " + file.getOriginalFilename() + "!";
-      return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ResponseMessage(message));
+      ResponseEntity<StorageServiceResponse> responseEntity = new ResponseEntity<StorageServiceResponse>(HttpStatus.EXPECTATION_FAILED);
+      responseEntity.getBody().setMessage(message);
+      return responseEntity;
     }
   }
 
@@ -69,4 +70,5 @@ public class FileController {
         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileDB.getName() + "\"")
         .body(fileDB.getData());
   }
+
 }
